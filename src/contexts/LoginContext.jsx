@@ -7,20 +7,20 @@ export const LoginContext = createContext({
 
 const LoginContextProvider = (props) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userId, setUserId] = useState("");
+  const [userData, setUserData] = useState("");
 
   const handleSetIsAuthenticated = (authenticationStatus) => {
     setIsAuthenticated(authenticationStatus);
   };
-  const handleSetUserId = (userId) => {
-    setUserId(userId);
+  const handleSetUserData = (data) => {
+    setUserData(data);
   };
 
   const contextObj = {
     isAuthenticated,
-    userId,
+    userData,
     handleSetIsAuthenticated,
-    handleSetUserId,
+    handleSetUserData,
   };
 
   return (

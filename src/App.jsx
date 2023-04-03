@@ -9,16 +9,15 @@ import LoginPage from "./pages/loginPage/LoginPage";
 import PrivateRoutes from "./privateRoutes/PrivateRoutes";
 
 function App() {
-  const { handleSetIsAuthenticated, handleSetUserId } =
+  const { handleSetIsAuthenticated, handleSetUserData } =
     useContext(LoginContext);
 
   onAuthStateChanged(auth, (user) => {
     if (user) {
       handleSetIsAuthenticated(true);
-      handleSetUserId(user.uid);
+      handleSetUserData(user);
     } else {
       handleSetIsAuthenticated(false);
-      handleSetUserId("");
     }
   });
 

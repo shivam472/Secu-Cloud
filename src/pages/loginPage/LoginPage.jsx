@@ -11,11 +11,12 @@ import { LoginContext } from "../../contexts/LoginContext";
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useContext(LoginContext);
+  const { isAuthenticated, handleSetUserData } = useContext(LoginContext);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     const googleProvider = new GoogleAuthProvider();
-    signInWithPopup(auth, googleProvider);
+    const response = await signInWithPopup(auth, googleProvider);
+    handleSetUserData(response.user);
   };
 
   useEffect(() => {

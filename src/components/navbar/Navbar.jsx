@@ -15,13 +15,24 @@ import AdbIcon from "@mui/icons-material/Adb";
 import FilterDramaIcon from "@mui/icons-material/FilterDrama";
 
 import classes from "./Navbar.module.css";
+import { signOut } from "firebase/auth";
+import { auth } from "../../../firebase";
+import { Tab, Tabs } from "@mui/material";
+import { Link, useNavigate } from "react-router-dom";
+import { LoginContext } from "../../contexts/LoginContext";
+
+const tabItems = [
+  { label: "Dashboard", link: "/dashboard" },
+  { label: "About", link: "/about" },
+];
 
 const pages = ["Dashboard", "About"];
-const settings = ["Logout"];
-
 function Navbar() {
+  const navigate = useNavigate();
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
+  const [selectedTab, setSelectedTab] = React.useState(0);
+  const { userData } = React.useContext(LoginContext);
 
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
@@ -32,6 +43,10 @@ function Navbar() {
 
   const handleCloseNavMenu = () => {
     setAnchorElNav(null);
+  };
+
+  const handleLogout = () => {
+    signOut(auth);
   };
 
   const handleCloseUserMenu = () => {
@@ -82,9 +97,9 @@ function Navbar() {
                 display: { xs: "block", md: "none" },
               }}
             >
-              {pages.map((page) => (
-                <MenuItem key={page} onClick={handleCloseNavMenu}>
-                  <Typography textAlign="center">{page}</Typography>
+              {tabItems.map((item) => (
+                <MenuItem key={item.label} onClick={() => navigate(item.link)}>
+                  <Typography textAlign="center">{item.label}</Typography>
                 </MenuItem>
               ))}
             </Menu>
@@ -111,26 +126,37 @@ function Navbar() {
           </Typography>
 
           <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}>
-            {pages.map((page) => (
-              <Button
-                key={page}
-                onClick={handleCloseNavMenu}
-                sx={{ my: 2, color: "white", display: "block" }}
-              >
-                {page}
-              </Button>
-            ))}
+            <Tabs
+              value={selectedTab}
+              onChange={(e) => setSelectedTab(e.target.value)}
+              sx={{ "& .Mui-selected": { color: "white" } }}
+              indicatorColor="secondary"
+            >
+              {tabItems.map((item, index) => (
+                <Tab
+                  key={item.label}
+                  component={Link}
+                  to={item.link}
+                  value={index}
+                  label={item.label}
+                  sx={{
+                    my: 2,
+                    color: "white",
+                    display: "block",
+                  }}
+                />
+              ))}
+            </Tabs>
           </Box>
 
           <Box sx={{ flexGrow: 0 }}>
             <Tooltip title="Open settings">
               <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
+                <Avatar alt="Display Picture" src={userData.photoURL} />
               </IconButton>
             </Tooltip>
             <Menu
               sx={{ mt: "45px" }}
-              id="menu-appbar"
               anchorEl={anchorElUser}
               anchorOrigin={{
                 vertical: "top",
@@ -144,11 +170,9 @@ function Navbar() {
               open={Boolean(anchorElUser)}
               onClose={handleCloseUserMenu}
             >
-              {settings.map((setting) => (
-                <MenuItem key={setting} onClick={handleCloseUserMenu}>
-                  <Typography textAlign="center">{setting}</Typography>
-                </MenuItem>
-              ))}
+              <MenuItem onClick={handleLogout}>
+                <Typography textAlign="center">Logout</Typography>
+              </MenuItem>
             </Menu>
           </Box>
         </Toolbar>
