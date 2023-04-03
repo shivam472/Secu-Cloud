@@ -1,0 +1,19 @@
+.imageContainer {
+  background-image: url("../../assets/loginPageImage.jpeg");
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+.headerText {
+  font-weight: bolder;
+  position: absolute;
+  top: 20px;
+
+  background: linear-gradient(
+    90deg,
+    hsla(339, 100%, 55%, 1) 0%,
+    hsla(197, 100%, 64%, 1) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
