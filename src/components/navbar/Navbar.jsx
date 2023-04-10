@@ -129,8 +129,8 @@ function Navbar() {
             <Tabs
               value={selectedTab}
               onChange={(e) => setSelectedTab(e.target.value)}
-              sx={{ "& .Mui-selected": { color: "white" } }}
               indicatorColor="secondary"
+              sx={{ "& .MuiTab-root.Mui-selected": { color: "white" } }}
             >
               {tabItems.map((item, index) => (
                 <Tab

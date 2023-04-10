@@ -1,105 +1,87 @@
-import {
-  Box,
-  Button,
-  Card,
-  CardActions,
-  CardContent,
-  Grid,
-  Typography,
-} from "@mui/material";
-import React, { useRef, useState } from "react";
+import { Box, Button, Grid, Typography } from "@mui/material";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { BsFillFolderFill } from "react-icons/bs";
+import FileUploader from "../../components/fileUploader/FileUploader";
+import FilesTable from "../../components/filesTable/FilesTable";
+import { LoginContext } from "../../contexts/LoginContext";
+import { getMetadata, listAll, ref } from "firebase/storage";
+import { storage } from "../../../firebase";
 
 const DashboardPage = () => {
-  const [files, setFiles] = useState([]);
-  const inputRef = useRef(null);
+  const [currentUserFiles, setCurrentUserFiles] = useState([]);
+  const [otherUsersFiles, setOtherUsersFiles] = useState([]);
+  const { userData } = useContext(LoginContext);
 
-  const handleDrop = (e) => {
-    e.preventDefault();
-    const droppedFiles = Array.from(e.dataTransfer.files);
-    const textFiles = droppedFiles.filter((file) =>
-      file.type.startsWith("text/")
-    );
-    setFiles(textFiles);
-  };
+  useEffect(() => {
+    const fetchAllFiles = async () => {
+      const currentUserFolderName = userData.email;
+      const currentUserFolderRef = ref(storage, currentUserFolderName);
+      const files = await listAll(currentUserFolderRef);
+      let currentUserFilesTemp = [];
+      for (const fileRef of files.items) {
+        const fileMetaData = await getMetadata(fileRef);
+        fileMetaData.owner = currentUserFolderName;
+        console.log("current User file: ", fileMetaData);
+        currentUserFilesTemp.push(fileMetaData);
+      }
 
-  const handleInputChange = (e) => {
-    const selectedFiles = Array.from(e.target.files);
-    const textFiles = selectedFiles.filter((file) =>
-      file.type.startsWith("text/")
-    );
-    setFiles(textFiles);
-  };
+      setCurrentUserFiles(currentUserFilesTemp);
+    };
 
-  const handleDropZoneClick = () => {
-    inputRef.current.click();
-  };
+    fetchAllFiles();
+  }, []);
+
+  useEffect(() => {
+    const fetchAllFolders = async () => {
+      const storageRef = ref(storage, "/");
+      const { prefixes } = await listAll(storageRef);
+
+      const currentUserFolderName = userData.email;
+
+      const folderNames = prefixes.map((prefix) => prefix.name);
+      const otherUsersFolderNames = folderNames.filter(
+        (name) => name !== currentUserFolderName
+      );
+
+      const otherUsersFilesTemp = [];
+      for (const folderName of otherUsersFolderNames) {
+        const folderRef = ref(storage, `${folderName}/`);
+        const files = await listAll(folderRef);
+        for (const fileRef of files.items) {
+          const fileMetaData = await getMetadata(fileRef);
+          fileMetaData.owner = folderName;
+          console.log("other user file: ", fileMetaData);
+          otherUsersFilesTemp.push(fileMetaData);
+        }
+      }
+      setOtherUsersFiles(otherUsersFilesTemp);
+    };
+
+    fetchAllFolders();
+  }, []);
 
   return (
     <Grid
       container
       item
       width="100%"
-      height="calc(100vh - 70px)"
-      justifyContent="center"
+      height="calc(100% - 70px)"
+      alignItems="center"
       padding={1}
+      direction="column"
+      gap={10}
     >
-      <Card
-        sx={{
-          width: "500px",
-          height: "400px",
-          position: "relative",
-          top: "50px",
-          display: "flex",
-          flexDirection: "column",
-          padding: 2
-        }}
-      >
-        <CardContent sx={{ display: "flex", height: "70%", flex: 1 }}>
-          <Box
-            sx={{
-              border: "1px dashed #469fff",
-              borderRadius: "8px",
-              bgcolor: "#f3f4f7",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              flex: 1,
-              cursor: "pointer",
-            }}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={handleDrop}
-            onClick={handleDropZoneClick}
-          >
-            <BsFillFolderFill
-              style={{ width: "80px", height: "80px" }}
-              color="#0067F4"
-            />
-            <Typography color="#595959" fontSize="18px">
-              Drag & Drop files here or browse
-            </Typography>
-            <input
-              type="file"
-              ref={inputRef}
-              onChange={handleInputChange}
-              style={{ display: "none" }}
-              accept="text/*"
-            />
+      <FileUploader />
 
-            {files.map((file) => (
-              <Card key={file.name} sx={{ mt: 3 }}>
-                <CardContent>
-                  {file.name} - {file.size} bytes
-                </CardContent>
-              </Card>
-            ))}
-          </Box>
-        </CardContent>
-        <CardActions sx={{ display: "flex", justifyContent: "center" }}>
-          <Button variant="contained">Upload Files</Button>
-        </CardActions>
-      </Card>
+      <Grid container item direction="column" gap>
+        <Typography variant="h4">Your Files</Typography>
+        <FilesTable files={currentUserFiles} />
+      </Grid>
+
+      <Grid container item direction="column" gap>
+        <Typography variant="h4">Files By Other Users</Typography>
+        <FilesTable files={otherUsersFiles} />
+      </Grid>
     </Grid>
   );
 };
