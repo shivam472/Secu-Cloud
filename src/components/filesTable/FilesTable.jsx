@@ -9,19 +9,47 @@ import {
   TableRow,
 } from "@mui/material";
 import { getDownloadURL, ref } from "firebase/storage";
-import React from "react";
+import React, { useContext, useEffect } from "react";
 import { storage } from "../../../firebase";
+import { LoginContext } from "../../contexts/LoginContext";
+import CryptoJS from "crypto-js";
+// import { saveAs } from "file-saver";
 
-const FilesTable = ({ files }) => {
+const FilesTable = ({ files, type }) => {
+  const { secretKey } = useContext(LoginContext);
+
   const handleDownload = async (owner, fileName) => {
     const pathReference = ref(storage, `${owner}/${fileName}`);
-    getDownloadURL(ref(storage, pathReference)).then((url) => {
-      // Create a link or button that points to the download URL
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "filename.png"; // set the filename to download as
-      link.click(); // simulate a click to trigger the download
-    });
+    const fileUrl = await getDownloadURL(pathReference);
+
+    const xhr = new XMLHttpRequest();
+    xhr.responseType = "blob";
+
+    xhr.onload = function () {
+      const encryptedFile = xhr.response;
+      const reader = new FileReader();
+      reader.onload = function () {
+        const decryptedData = CryptoJS.AES.decrypt(reader.result, secretKey);
+        const decryptedDataString = CryptoJS.enc.Utf8.stringify(decryptedData);
+
+        // Create a new blob object
+        const blob = new Blob([decryptedDataString], {
+          type: encryptedFile.type,
+        });
+
+        // Create a download link
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName;
+
+        // Programmatically click the link to initiate the download
+        link.click();
+      };
+      reader.readAsText(encryptedFile);
+    };
+
+    xhr.open("GET", fileUrl, true);
+    xhr.send();
   };
 
   return (
@@ -33,7 +61,7 @@ const FilesTable = ({ files }) => {
             <TableCell align="right">Size (in KB)</TableCell>
             <TableCell align="right">Uploaded On</TableCell>
             <TableCell align="right">Owner</TableCell>
-            <TableCell align="right">Download</TableCell>
+            {type === "SELF" && <TableCell align="right">Download</TableCell>}
           </TableRow>
         </TableHead>
         <TableBody>
@@ -50,11 +78,13 @@ const FilesTable = ({ files }) => {
                 {new Date(file.timeCreated).toLocaleString()}
               </TableCell>
               <TableCell align="right">{file.owner}</TableCell>
-              <TableCell align="right">
-                <Button onClick={() => handleDownload(file.owner, file.name)}>
-                  Download
-                </Button>
-              </TableCell>
+              {type === "SELF" && (
+                <TableCell align="right">
+                  <Button onClick={() => handleDownload(file.owner, file.name)}>
+                    Download
+                  </Button>
+                </TableCell>
+              )}
             </TableRow>
           ))}
         </TableBody>

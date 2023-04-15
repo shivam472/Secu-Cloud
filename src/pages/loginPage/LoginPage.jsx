@@ -1,11 +1,11 @@
 import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-
+import CryptoJS, { enc } from "crypto-js";
 import { Button, Grid, Typography } from "@mui/material";
 import React, { useContext, useEffect } from "react";
 import CloudIcon from "../../assets/cloud.png";
 import { FcGoogle } from "react-icons/fc";
 import classes from "./LoginPage.module.css";
-import { auth } from "../../../firebase";
+import { auth, db } from "../../../firebase";
 import { useNavigate } from "react-router-dom";
 import { LoginContext } from "../../contexts/LoginContext";
 

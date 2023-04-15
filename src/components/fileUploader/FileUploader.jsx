@@ -11,12 +11,12 @@ import React, { useContext, useRef, useState } from "react";
 import { BsFillFolderFill } from "react-icons/bs";
 import { storage } from "../../../firebase";
 import { LoginContext } from "../../contexts/LoginContext";
-import CryptoJS from 'crypto-js';
+import CryptoJS from "crypto-js";
 
-const FileUploader = () => {
+const FileUploader = ({ handleFetchFiles }) => {
   const [files, setFiles] = useState([]);
   const inputRef = useRef(null);
-  const { userData } = useContext(LoginContext);
+  const { userData, secretKey } = useContext(LoginContext);
 
   const handleDrop = (e) => {
     e.preventDefault();
@@ -63,7 +63,7 @@ const FileUploader = () => {
       // Encrypt the file content using AES
       const encryptedFileContent = CryptoJS.AES.encrypt(
         fileContent,
-        "secret-key"
+        secretKey
       ).toString();
 
       console.log("encrypted file content: ", encryptedFileContent);
@@ -77,6 +77,7 @@ const FileUploader = () => {
       try {
         await uploadBytes(fileRef, encryptedFile);
         setFiles([]);
+        handleFetchFiles();
         console.log("file uploaded successfully!");
       } catch (err) {
         console.log("error: ", err);
