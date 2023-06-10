@@ -33,12 +33,16 @@ const DashboardPage = () => {
           ? docSnap.data().encryptionKeyGenerated
           : false;
         if (!encryptionKeyGenerated) {
+          console.log("new user");
           const secretKey = generateRandomSecretKey(128);
           handleSetSecretKey(secretKey);
           await setDoc(docRef, {
             encryptionKeyGenerated: true,
           });
           console.log("Encryption key generated status updated successfully.");
+        } else {
+          handleSetSecretKey("");
+          console.log("existing user");
         }
       } catch (error) {
         console.error(
